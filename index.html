@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sayı Kraliçesi Kedisi 🐱</title>
+    <!-- Konfeti Kütüphanesi -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Comic Sans MS', 'Chalkboard SE', cursive, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #ffe6f0 0%, #ffb3d9 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        #top-bar {
+            width: 100%;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+        }
+
+        .stat-box {
+            font-size: 20px;
+            font-weight: bold;
+            color: #d63384;
+            background: white;
+            padding: 6px 16px;
+            border-radius: 30px;
+            border: 2px solid #ff66b2;
+        }
+
+        #game-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        #speech-bubble {
+            background: white;
+            padding: 12px 20px;
+            border-radius: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: #4A4A4A;
+            border: 3px solid #ff66b2;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            max-width: 85%;
+            text-align: center;
+        }
+
+        #cat-frame {
+            width: 170px;
+            height: 170px;
+            border-radius: 50%;
+            border: 6px solid #ff66b2;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            overflow: hidden;
+            background: white;
+            transition: all 0.5s ease;
+        }
+
+        #cat-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #question-box {
+            font-size: 22px;
+            font-weight: bold;
+            color: #880e4f;
+            margin: 10px 0;
+            text-align: center;
+            padding: 0 20px;
+            min-height: 65px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #options-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 90%;
+            max-width: 700px;
+            margin-bottom: 20px;
+        }
+
+        .btn-option {
+            background: #ffffff;
+            color: #d63384;
+            border: 3px solid #ff99dd;
+            border-radius: 18px;
+            padding: 14px;
+            font-size: 19px;
+            font-weight: bold;
+            box-shadow: 0 5px 0px #ff66b2;
+            transition: all 0.1s ease;
+            text-align: center;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+        }
+
+        .btn-option:active {
+            transform: translateY(5px);
+            box-shadow: 0 0px 0px #ff66b2;
+        }
+
+        #level-modal, #end-screen {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255, 230, 240, 0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .modal-btn {
+            background: #ff3385;
+            color: white;
+            font-size: 24px;
+            padding: 15px 40px;
+            border-radius: 30px;
+            border: none;
+            box-shadow: 0 5px 15px rgba(255, 51, 133, 0.4);
+            margin-top: 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="top-bar">
+        <div class="stat-box">🐾 <span id="level-title">LEVEL 1</span></div>
+        <div class="stat-box">🎯 Soru: <span id="q-count">1</span>/10</div>
+        <div class="stat-box">⭐ Puan: <span id="score">0</span></div>
+    </div>
+
+    <div id="game-stage">
+        <div id="speech-bubble">Miyav! Beni büyütmek için soruları çöz! 🐟</div>
+        <div id="cat-frame">
+            <img id="cat-img" src="" alt="Kedi">
+        </div>
+    </div>
+
+    <div id="question-box">Soru yükleniyor...</div>
+    <div id="options-container"></div>
+
+    <div id="level-modal">
+        <h1 style="font-size: 40px; color: #d63384;" id="modal-title">HARİKA! 🎉</h1>
+        <p style="font-size: 24px; color: #4A4A4A;" id="modal-desc">Kedi büyüdü!</p>
+        <button class="modal-btn" onclick="nextLevel()">Sonraki Level'e Geç 🚀</button>
+    </div>
+
+    <div id="end-screen">
+        <div style="font-size: 80px;">👑🐱👑</div>
+        <h1 style="font-size: 45px; color: #880e4f;">TEBRİKLER!</h1>
+        <p style="font-size: 26px; color: #4A4A4A;">Kedini **Sayı Kraliçesi** yaptın!</p>
+        <p style="font-size: 28px; color: #d63384;">Toplam Puanın: <span id="final-score">0</span></p>
+    </div>
+
+    <script>
+        const catImages = {
+            1: "https://images.unsplash.com/photo-1595433707802-6b2626ef1c91?w=400&auto=format&fit=crop", 
+            2: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=400&auto=format&fit=crop", 
+            3: "https://images.unsplash.com/photo-1573865526739-10659fec78a5?w=400&auto=format&fit=crop"  
+        };
+
+        let currentLevel = 1;
+        let questionIndex = 1; 
+        let score = 0;
+        let lastType = -1; // Üst üste aynı soru tipi gelmesin diye
+
+        const catImg = document.getElementById('cat-img');
+        const levelTitle = document.getElementById('level-title');
+        const qCount = document.getElementById('q-count');
+        const scoreElement = document.getElementById('score');
+        const questionBox = document.getElementById('question-box');
+        const optionsContainer = document.getElementById('options-container');
+        const speechBubble = document.getElementById('speech-bubble');
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Okunuş Dönüştürücüler
+        const birler = ["", "bir", "iki", "üç", "dört", "beş", "altı", "yedi", "sekiz", "dokuz"];
+        const onlar = ["", "on", "yirmi", "otuz", "kırk", "elli", "altmış", "yetmiş", "seksen", "doksan"];
+
+        function numberToWords(n) {
+            let s = n.toString();
+            if (s.length === 4) {
+                let bin = s[0] === '1' ? "bin" : birler[parseInt(s[0])] + " bin";
+                let yuz = s[1] === '0' ? "" : (s[1] === '1' ? "yüz" : birler[parseInt(s[1])] + " yüz");
+                let on = onlar[parseInt(s[2])];
+                let bir = birler[parseInt(s[3])];
+                return `${bin} ${yuz} ${on} ${bir}`.trim().replace(/\s+/g, ' ');
+            } else if (s.length === 5) {
+                let binlik = parseInt(s.substring(0, 2));
+                let binStr = (onlar[Math.floor(binlik/10)] + " " + birler[binlik%10]).trim() + " bin";
+                let yuz = s[2] === '0' ? "" : (s[2] === '1' ? "yüz" : birler[parseInt(s[2])] + " yüz");
+                let on = onlar[parseInt(s[3])];
+                let bir = birler[parseInt(s[4])];
+                return `${binStr} ${yuz} ${on} ${bir}`.trim().replace(/\s+/g, ' ');
+            } else {
+                let binlik = parseInt(s.substring(0, 3));
+                let yuzBin = s[0] === '1' ? "yüz" : birler[parseInt(s[0])] + " yüz";
+                let onBin = onlar[parseInt(s[1])];
+                let birBin = birler[parseInt(s[2])];
+                let binStr = `${yuzBin} ${onBin} ${birBin}`.trim() + " bin";
+                let yuz = s[3] === '0' ? "" : (s[3] === '1' ? "yüz" : birler[parseInt(s[3])] + " yüz");
+                let on = onlar[parseInt(s[4])];
+                let bir = birler[parseInt(s[5])];
+                return `${binStr} ${yuz} ${on} ${bir}`.trim().replace(/\s+/g, ' ');
+            }
+        }
+
+        function updateStage() {
+            catImg.src = catImages[currentLevel];
+            levelTitle.innerText = `LEVEL ${currentLevel}`;
+            qCount.innerText = questionIndex;
+            scoreElement.innerText = score;
+        }
+
+        function generateQuestion() {
+            optionsContainer.innerHTML = '';
+            
+            // Üst üste aynı tip soru gelmesini engelle
+            let qType;
+            do {
+                qType = getRandomInt(1, 4);
+            } while (qType === lastType);
+            lastType = qType;
+
+            let minNum = currentLevel === 1 ? 1000 : (currentLevel === 2 ? 10000 : 100000);
+            let maxNum = currentLevel === 1 ? 9999 : (currentLevel === 2 ? 99999 : 999999);
+            let digitCount = currentLevel === 1 ? 4 : (currentLevel === 2 ? 5 : 6);
+
+            let num = getRandomInt(minNum, maxNum);
+            let numStr = num.toString();
+            let titleText = "";
+            let correct = "", w1 = "", w2 = "", w3 = "";
+
+            if (qType === 1) {
+                // Tip 1: Okunuşu Verilen Sayı Hangisidir? (Kitap Sayfa 16-18)[cite: 105]
+                let words = numberToWords(num);
+                titleText = `Okunuşu **"${words}"** olan sayı kaçtır?`;
+                correct = numStr;
+                w1 = (num + 10).toString();
+                w2 = (num - 100).toString();
+                w3 = (num + 1000).toString();
+
+            } else if (qType === 2) {
+                // Tip 2: Sayının Okunuşu Hangisidir? (Kitap Sayfa 16-18)[cite: 105]
+                titleText = `**"${numStr}"** sayısının okunuşu hangisidir?`;
+                correct = numberToWords(num);
+                w1 = numberToWords(num + 10);
+                w2 = numberToWords(num - 100 < minNum ? num + 200 : num - 100);
+                w3 = numberToWords(num + 5);
+
+            } else if (qType === 3) {
+                // Tip 3: Basamak Değeri & Çözümleme (Kitap Sayfa 22-26)[cite: 98]
+                let basamaklar = digitCount === 4 ? ["Birler", "Onlar", "Yüzler", "Binler"] :
+                                 digitCount === 5 ? ["Birler", "Onlar", "Yüzler", "Binler", "On Binler"] :
+                                                    ["Birler", "Onlar", "Yüzler", "Binler", "On Binler", "Yüz Binler"];
+                let randIndex = getRandomInt(0, basamaklar.length - 1);
+                let chosenBas = basamaklar[randIndex];
+                let digitVal = parseInt(numStr[numStr.length - 1 - randIndex]);
+                let placeValue = digitVal * Math.pow(10, randIndex);
+
+                titleText = `**"${numStr}"** sayısındaki **${chosenBas}** basamağının basamak değeri kaçtır?`;
+                correct = placeValue.toString();
+                w1 = (placeValue + 10).toString();
+                w2 = (digitVal * 10).toString();
+                w3 = (placeValue === 0 ? "100" : (placeValue * 10).toString());
+
+            } else {
+                // Tip 4: Bölükler (Binler Bölüğü / Birler Bölüğü) (Kitap Sayfa 28-30)[cite: 98, 110]
+                let isBinler = getRandomInt(0, 1) === 1;
+                let bolukName = isBinler ? "Binler Bölüğü" : "Birler Bölüğü";
+                
+                if (isBinler) {
+                    correct = numStr.substring(0, digitCount - 3);
+                    w1 = numStr.substring(digitCount - 3);
+                } else {
+                    correct = numStr.substring(digitCount - 3);
+                    w1 = numStr.substring(0, digitCount - 3);
+                }
+                titleText = `**"${numStr}"** sayısının **${bolukName}** hangisidir?`;
+                w2 = (parseInt(correct) + 5).toString();
+                w3 = (parseInt(correct) + 12).toString();
+            }
+
+            questionBox.innerHTML = titleText;
+
+            let choices = [correct, w1, w2, w3];
+            choices = [...new Set(choices)];
+            while(choices.length < 4) { choices.push((getRandomInt(1, 999)).toString()); }
+            choices.sort(() => Math.random() - 0.5);
+
+            choices.forEach(ans => {
+                let btn = document.createElement('div');
+                btn.className = 'btn-option';
+                btn.innerText = ans;
+                btn.onclick = () => checkAnswer(ans === correct);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function checkAnswer(isCorrect) {
+            if (isCorrect) {
+                score += 10;
+                speechBubble.innerText = "Harika! Nefis bir mama geldii! 🐟✨";
+                triggerConfetti();
+            } else {
+                speechBubble.innerText = "Miyavv! Olsun, bir dahakine doğruyu buluruz! 🐱";
+            }
+
+            questionIndex++;
+
+            if (questionIndex > 10) {
+                if (currentLevel < 3) {
+                    showLevelModal();
+                } else {
+                    showEndScreen();
+                }
+            } else {
+                updateStage();
+                generateQuestion();
+            }
+        }
+
+        // Büyük Konfeti Efekti
+        function triggerConfetti() {
+            confetti({
+                particleCount: 80,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+
+        function showLevelModal() {
+            triggerConfetti();
+            document.getElementById('level-modal').style.display = 'flex';
+            document.getElementById('modal-title').innerText = `LEVEL ${currentLevel} TAMAMLANDI! 🎉`;
+            document.getElementById('modal-desc').innerText = `Tebrikler! Kedin büyüdü ve ${currentLevel + 1}. Level'e hazır!`;
+        }
+
+        function nextLevel() {
+            currentLevel++;
+            questionIndex = 1;
+            document.getElementById('level-modal').style.display = 'none';
+            updateStage();
+            generateQuestion();
+        }
+
+        function showEndScreen() {
+            triggerConfetti();
+            document.getElementById('end-screen').style.display = 'flex';
+            document.getElementById('final-score').innerText = score;
+        }
+
+        updateStage();
+        generateQuestion();
+    </script>
+</body>
+</html>
